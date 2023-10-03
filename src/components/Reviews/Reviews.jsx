@@ -1,46 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-
-import { fetchMovieReviews } from 'service/Api';
+import { Loader } from "components/Loader/Loader";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { getMovieReviews } from "services/API";
 
 const Reviews = () => {
-  const { movieId } = useParams();
-  const [reviews, setReviews] = useState([]);
-
+    const [reviews, setReviews] = useState([]);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const { movieId } = useParams();
+    
   useEffect(() => {
-    // Отримання оглядів фільму з API
-    const movieReviews = async () => {
+    const getReviews = async () => {
       try {
-        const response = await fetchMovieReviews(movieId);
-        setReviews(response);
+        setLoading(true);
+        const response = await getMovieReviews(movieId);
+        setReviews(response.results);
       } catch (error) {
-        console.error(error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
-
-    movieReviews();
+    getReviews();
   }, [movieId]);
-
-  return (
+    
+    return (
     <>
-      {reviews.length !== 0 && (
-        <div>
-          <h2>Movie Reviews</h2>
-          <ul>
-            {reviews.map(review => (
-              <li key={review.id}>
-                <p>{review.author}</p>
-                <p>{review.content}</p>
+        {loading && <Loader />}
+        
+        {error && !loading && <p>Error: {error}</p>}
+    
+        <ul>
+          {reviews.length > 0 ? (
+            reviews.map(({ author, content, id }) => (
+              <li key={id}>
+                <h4>Author: {author}</h4>
+                <p>{content}</p>
               </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {reviews.length === 0 && (
-        <div>We don't have any reviews for this movie.</div>
-      )}
+            ))
+          ) : (
+              <p>This movie has no reviews! Try again </p>
+          )}
+        </ul>
     </>
   );
-};
+}
 
 export default Reviews;

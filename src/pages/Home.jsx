@@ -1,42 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
-
-import MovieList from 'components/MovieList/MovieList';
-import { fetchTrendingMovies } from 'service/Api';
+import { useEffect, useState } from 'react';
+import { MoviesList } from "components/MoviesList/MoviesList";
+import { Loader } from 'components/Loader/Loader';
+import { getTrendingMovies } from 'services/API';
 
 const Home = () => {
-  const [trendingMovies, setTrendingMovies] = useState([]);
+    const [movies, setMovies] = useState([]);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Отримання списку популярних фільмів з API
-    const fetchData = async () => {
-      try {
-        const movies = await fetchTrendingMovies(); // Call the fetchTrendingMovies function
-        setTrendingMovies(movies); // Update the trendingMovies state with the fetched movies
-      } catch (error) {
-        console.error(error);
-      }
-    };
+    useEffect(() => {
+        async function getListTrendingMovies() {
+            try {
+                setLoading(true);
 
-    fetchData(); // Call the fetchData function to fetch the trending movies
-  }, []);
+                const  dataTrendingMovies  = await getTrendingMovies();
+                setMovies(dataTrendingMovies.results);
+            } catch (error) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        }
+        getListTrendingMovies();
+    }, []);
+    
+    return (
+        <>
+            <h1>Trending today</h1>
+            
+            {loading && <Loader />}
 
-  return (
-    <div>
-      <h2>Trending Movies</h2>
-      <SkeletonTheme baseColor="#dddddd" highlightColor="#a5a5a5">
-        {trendingMovies.length === 0 ? (
-          <Skeleton
-            count={15}
-            style={{ height: 30, width: 300, marginTop: 15 }}
-          />
-        ) : (
-          <MovieList films={trendingMovies} />
-        )}
-      </SkeletonTheme>
-    </div>
-  );
+            {error && <p>Error: {error}</p>}
+            
+            <MoviesList movies={movies}/>
+        </>
+    )
 };
 
 export default Home;

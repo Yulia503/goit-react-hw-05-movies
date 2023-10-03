@@ -1,56 +1,61 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-
-import { fetchMovieCast } from 'service/Api';
-import { List, Item } from './Cast.styled';
-import placeholder from '../images/placeholder.png';
+import { Loader } from "components/Loader/Loader";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { getMovieCast } from "services/API";
+import defaultPhoto from './avatar.jpg'
 
 const Cast = () => {
-  const { movieId } = useParams();
-  const [cast, setCast] = useState([]);
-
+    const [cast, setCast] = useState([]);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const { movieId } = useParams();
+    
+  
+  
+  
   useEffect(() => {
-    // Отримання інформації про акторський склад фільму з API
-
-    const movieCast = async () => {
+    const getCast = async () => {
       try {
-        const response = await fetchMovieCast(movieId);
-        setCast(response);
+        setLoading(true);
+        const response = await getMovieCast(movieId);
+        setCast(response.cast);
       } catch (error) {
-        console.error(error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
-    movieCast();
-  }, [movieId]);
 
-  return (
+
+
+
+    getCast();
+  }, [movieId]);
+    
+    return (
     <>
-      {cast.length !== 0 && (
-        <div>
-          <h2>Movie Cast</h2>
-          <List>
-            {cast.map(actor => (
-              <Item key={actor.id}>
+        {loading && <Loader />}
+        
+        {error && !loading && <p>Error: {error}</p>}
+
+        <ul>
+          {cast.map(({ character, name, profile_path, id }) => (
+            <li key={id}>
                 <img
-                  width="200px"
-                  height="300px"
-                  src={
-                    actor.profile_path
-                      ? `https://image.tmdb.org/t/p/w300${actor.profile_path}`
-                      : `${placeholder}`
-                  }
-                  alt={actor.original_name}
+                  height="200"
+                src={profile_path
+                  ? `https://image.tmdb.org/t/p/w200${profile_path}`
+                  : defaultPhoto}
+                  alt={name}
                 />
-                <p>{actor.name}</p>
-              </Item>
-            ))}
-          </List>
-        </div>
-      )}
-      {cast.length === 0 && <div>We don't have any cast for this movie.</div>}
-    </>
-  );
-};
+              <p>Name: {name}</p>
+              <p>Character: {character}</p>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+}
 
 export default Cast;

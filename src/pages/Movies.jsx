@@ -1,54 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
-
-import { handleSearch } from 'service/Api';
-import { SearchForm } from 'components/SearchForm/SearchForm';
-import MovieList from 'components/MovieList/MovieList';
+import { Loader } from "components/Loader/Loader";
+import { MoviesList } from "components/MoviesList/MoviesList";
+import { SearchBox } from "components/SearchBox/SearchBox";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { getMovieByName } from "services/API";
 
 const Movies = () => {
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const movieName = searchParams.get('query') || '';
-  const [loading, setLoading] = useState(false);
+    const [movies, setMovies] = useState([]);
+    const [searchParams] = useSearchParams();
+    const [isLoading, setIsLoading] = useState(false);
+    const name = searchParams.get("name");
 
-  const updateQueryString = query => {
-    const nextParams = query !== '' && { query };
-    setSearchParams(nextParams);
-  };
-
-  useEffect(() => {
-    const search = async () => {
-      try {
-        setLoading(true);
-        const movies = await handleSearch(movieName);
-        setSearchResults(movies);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+    useEffect(() => {
+         if (!name) return;
+        async function getMovie() {
+            try {
+                setIsLoading(true);
+                const response = await getMovieByName(name);
+                
+                setMovies(response.results);
+            } catch (error) {
+                console.log(error);
+            } 
+            finally {
+        setIsLoading(false);
       }
-    };
-    search();
-  }, [movieName]);
+        }
+            getMovie();
+    }, [name]);
 
   return (
-    <div>
-      <SkeletonTheme baseColor="#dddddd" highlightColor="#a5a5a5">
-        <SearchForm value={movieName} onChange={updateQueryString} />
-        {loading ? (
-          <Skeleton
-            count={15}
-            style={{ height: 30, width: 300, marginTop: 15 }}
-          />
-        ) : searchResults.length === 0 && movieName ? (
-          <h2>🔎 Nothing found</h2>
-        ) : (
-          <MovieList films={searchResults} />
-        )}
-      </SkeletonTheme>
-    </div>
+    <>
+        <SearchBox />
+
+        {isLoading && <Loader />}
+         
+          <MoviesList movies={movies} />
+    </>
   );
 };
 
