@@ -23,9 +23,9 @@ const MovieInfo = ({ movie, goBack }) => {
       <LinkBack to={goBack}>Go Back</LinkBack>
       <MovieWrap>
           <img
-            alt={original_title}
+           alt={original_title}
           src={`https://image.tmdb.org/t/p/w400${poster_path}`}
-          />
+          /> 
         <MovieInfoWrap>
           <h2>{title}({release_date?.slice(0, 4)})</h2>
           <p>User Score: {(vote_average * 10).toFixed()}%</p>
